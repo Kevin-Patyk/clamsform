@@ -1,0 +1,10 @@
+[package]
+name = "clamsform"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clamsform-core = { path = "../clamsform-core" }
+polars.workspace = true
+rand.workspace = true
+thiserror.workspace = true
