@@ -1,3 +1,4 @@
+use polars::error::PolarsError;
 use thiserror::Error;
 use super::super::utils::validation_errors::ValidationError;
 
@@ -18,10 +19,13 @@ pub enum ZStandardizationError {
         Consider removing this feature or applying a different normalization technique."
     )]
     NearZeroStandardDeviationError {
-        columns: Vec<(String, f64)>,
+        columns: Vec<String>,
     },
 
     #[error(transparent)]
-    ValidationError(#[from] ValidationError)
+    ValidationError(#[from] ValidationError),
+
+    #[error(transparent)]
+    PolarsError(#[from] PolarsError),
 }
 
