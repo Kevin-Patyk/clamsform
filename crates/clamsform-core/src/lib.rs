@@ -1,1 +1,1 @@
-pub mod normalization;
+pub mod feature_scaling;

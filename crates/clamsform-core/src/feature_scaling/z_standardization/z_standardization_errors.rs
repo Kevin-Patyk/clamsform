@@ -1,13 +1,14 @@
 use thiserror::Error;
+use super::super::utils::validation_errors::ValidationError;
 
 #[derive(Error, Debug)]
-pub enum StandardizationError {
+pub enum ZStandardizationError {
     #[error(
         "The standard deviation in column(s) {columns:?} is zero. \
         Division by zero is not allowed. \
         Consider removing this feature or applying a different normalization technique."
     )]
-    ZeroVarianceError {
+    ZeroStandardDeviationError {
         columns: Vec<String>,
     },
 
@@ -16,7 +17,11 @@ pub enum StandardizationError {
         Division by near zero can cause numeric instability. \
         Consider removing this feature or applying a different normalization technique."
     )]
-    NearZeroVarianceError {
+    NearZeroStandardDeviationError {
         columns: Vec<(String, f64)>,
     },
+
+    #[error(transparent)]
+    ValidationError(#[from] ValidationError)
 }
+
