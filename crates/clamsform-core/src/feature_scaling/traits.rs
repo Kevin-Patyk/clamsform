@@ -1,7 +1,9 @@
-use polars::{error::PolarsError, prelude::DataFrame};
+use polars::prelude::DataFrame;
+
 use super::z_standardization::z_standardization_errors::ZStandardizationError;
 
-pub trait Standardize {
-    fn calculate_statistics(&mut self) -> Result<(), PolarsError>;
-    fn standardize(&mut self) -> Result<DataFrame, ZStandardizationError>;
+pub trait FeatureScaler {
+    fn fit(&mut self) -> Result<(), ZStandardizationError>;
+    fn transform(&self) -> Result<DataFrame, ZStandardizationError>;
+    fn fit_transform(&mut self) -> Result<DataFrame, ZStandardizationError>;
 }

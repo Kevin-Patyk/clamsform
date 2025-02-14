@@ -1,5 +1,7 @@
 use polars::prelude::*;
-use super::super::traits::Standardize;
+
+use super::super::traits::FeatureScaler;
+use super::super::utils::validation_errors::*;
 use super::z_standardization_errors::ZStandardizationError;
 
 pub struct ZScoreTransformer {
@@ -18,36 +20,31 @@ impl ZScoreTransformer {
     }
 }
 
-impl Standardize for ZScoreTransformer {
-    fn calculate_statistics(&mut self) -> Result<(), PolarsError> {
-        self.mean = Some(
-            self.df
-            .clone()
-            .lazy()
-            .select([all().mean()])
-            .collect()?
-        );
+impl FeatureScaler for ZScoreTransformer {
+    fn fit(&mut self) -> Result<(), ZStandardizationError> {
+        validate_dataframe(&self.df)?;
 
-        self.std = Some(
-            self.df
-            .clone()
-            .lazy()
-            .select([all().std(1)])
-            .collect()?
-        );
-        
+        self.mean = Some(self.df.clone().lazy().select([all().mean()]).collect()?);
+        self.std = Some(self.df.clone().lazy().select([all().std(1)]).collect()?);
+
         Ok(())
     }
-    fn standardize(&mut self) -> Result<DataFrame, ZStandardizationError> {
 
-        self.df
+    fn transform(&self) -> Result<DataFrame, ZStandardizationError> {
+        validate_dataframe(&self.df)?;
+
+        let standardized_df = self
+            .df
             .clone()
             .lazy()
-            .select([
-                (all() - all().mean()) / all().std(1)
-            ])
+            .select([(all() - all().mean()) / all().std(1)])
             .collect()?;
 
-        todo!()
+        Ok(standardized_df)
+    }
+
+    fn fit_transform(&mut self) -> Result<DataFrame, ZStandardizationError> {
+        self.fit()?;
+        self.transform()
     }
 }
