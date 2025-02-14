@@ -36,6 +36,9 @@ pub enum ValidationError {
         Handle missing values before attempting to apply normalization techniques."
     )]
     MissingValuesError(String),
+
+    #[error(transparent)]
+    PolarsError(#[from] PolarsError),
 }
 
 /// Validates that the DataFrame is not empty (has at least one row).
@@ -93,11 +96,7 @@ pub fn validate_nan_values(df: &DataFrame) -> Result<(), ValidationError> {
     let nan_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter(|col| {
-            col.is_nan()
-                .unwrap_or_else(|_| ChunkedArray::from_slice("".into(), &[false]))
-                .any()
-        })
+        .filter(|col| col.is_nan().unwrap().any())
         .map(|col| col.name().to_string())
         .collect();
 
@@ -107,7 +106,6 @@ pub fn validate_nan_values(df: &DataFrame) -> Result<(), ValidationError> {
 
     Ok(())
 }
-// Convert to lazy frame for performance
 
 /// Validates that no columns in the DataFrame contain infinite values.
 ///
@@ -121,11 +119,7 @@ pub fn validate_infinite_values(df: &DataFrame) -> Result<(), ValidationError> {
     let inf_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter(|col| {
-            col.is_infinite()
-                .unwrap_or_else(|_| ChunkedArray::from_slice("".into(), &[false]))
-                .any()
-        })
+        .filter(|col| col.is_infinite().unwrap().any())
         .map(|col| col.name().to_string())
         .collect();
 
@@ -135,7 +129,6 @@ pub fn validate_infinite_values(df: &DataFrame) -> Result<(), ValidationError> {
 
     Ok(())
 }
-// Convert to lazy frame for performance
 
 /// Validates that no columns in the DataFrame contain missing (null) values.
 ///
