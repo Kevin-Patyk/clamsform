@@ -107,6 +107,7 @@ pub fn validate_nan_values(df: &DataFrame) -> Result<(), ValidationError> {
 
     Ok(())
 }
+// Convert to lazy frame for performance
 
 /// Validates that no columns in the DataFrame contain infinite values.
 ///
@@ -134,6 +135,7 @@ pub fn validate_infinite_values(df: &DataFrame) -> Result<(), ValidationError> {
 
     Ok(())
 }
+// Convert to lazy frame for performance
 
 /// Validates that no columns in the DataFrame contain missing (null) values.
 ///
