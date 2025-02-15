@@ -7,8 +7,7 @@ This is a personal project which aims to create a wrapper for `polars` to provid
 
 * Become more advanced in Rust programming.
 * Expand upon software engineering principles and best practices.
-* Learn more about the mathematics behind machine learning algorithms.
-* Learn how to code more machine learning algorithms from scratch.
+* Develop a package (almost) from scratch to learn package development principles. 
 * Get experience in developing a back-end in Rust🦀 and translating it to a package in Python🐍.
 
 This repository is still in its starting stages, but will continue to grow, thus it will be updated frequently and is subject to change. 
