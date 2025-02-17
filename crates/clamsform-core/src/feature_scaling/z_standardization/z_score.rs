@@ -1,7 +1,7 @@
 use polars::prelude::*;
 
 use super::super::traits::FeatureScaler;
-use super::super::utils::validation_errors::*;
+use crate::utils::validation_errors::*;
 use super::z_standardization_errors::ZStandardizationError;
 
 pub struct ZScoreTransformer {
