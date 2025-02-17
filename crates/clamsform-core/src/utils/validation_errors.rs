@@ -71,8 +71,10 @@ pub fn validate_numeric_columns(df: &DataFrame,) -> Result<(), ValidationError,>
     let non_numeric_cols: Vec<String,> = df
         .get_columns()
         .iter()
-        .filter(|col| !matches!(col.dtype(), DataType::Float64 | DataType::Float32),)
-        .map(|col| col.name().to_string(),)
+        .filter_map(|col| {
+            (!matches!(col.dtype(), DataType::Float64 | DataType::Float32))
+                .then(|| col.name().to_string(),)
+        },)
         .collect();
 
     if !non_numeric_cols.is_empty() {
@@ -96,8 +98,7 @@ pub fn validate_nan_values(df: &DataFrame,) -> Result<(), ValidationError,> {
     let nan_cols: Vec<String,> = df
         .get_columns()
         .iter()
-        .filter(|col| col.is_nan().unwrap().any(),)
-        .map(|col| col.name().to_string(),)
+        .filter_map(|col| col.is_nan().unwrap().any().then(|| col.name().to_string(),),)
         .collect();
 
     if !nan_cols.is_empty() {
@@ -119,8 +120,12 @@ pub fn validate_infinite_values(df: &DataFrame,) -> Result<(), ValidationError,>
     let inf_cols: Vec<String,> = df
         .get_columns()
         .iter()
-        .filter(|col| col.is_infinite().unwrap().any(),)
-        .map(|col| col.name().to_string(),)
+        .filter_map(|col| {
+            col.is_infinite()
+                .unwrap()
+                .any()
+                .then(|| col.name().to_string(),)
+        },)
         .collect();
 
     if !inf_cols.is_empty() {
@@ -142,8 +147,7 @@ pub fn validate_missing_values(df: &DataFrame,) -> Result<(), ValidationError,> 
     let missing_cols: Vec<String,> = df
         .get_columns()
         .iter()
-        .filter(|col| col.is_null().any(),)
-        .map(|col| col.name().to_string(),)
+        .filter_map(|col| col.is_null().any().then(|| col.name().to_string(),),)
         .collect();
 
     if !missing_cols.is_empty() {
