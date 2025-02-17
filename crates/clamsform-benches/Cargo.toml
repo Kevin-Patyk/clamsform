@@ -1,0 +1,12 @@
+[package]
+name = "clamsform-benches"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clamsform-core = { path = "../clamsform-core" }
+polars.workspace = true
+rayon.workspace = true
+
+[dev-dependencies]
+criterion = "0.5.1"

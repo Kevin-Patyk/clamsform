@@ -31,8 +31,8 @@ pub fn validate_non_zero_std(df: &DataFrame) -> Result<(), ZStandardizationError
         .get_columns()
         .iter()
         .filter_map(|col| match col.get(0).ok() {
-            Some(AnyValue::Float64(val)) if val == 0.0 => Some(col.name().to_string()),
-            Some(AnyValue::Float32(val)) if val == 0.0 => Some(col.name().to_string()),
+            Some(AnyValue::Float64(0.0)) => Some(col.name().to_string()),
+            Some(AnyValue::Float32(0.0)) => Some(col.name().to_string()),
             _ => None,
         })
         .collect();
