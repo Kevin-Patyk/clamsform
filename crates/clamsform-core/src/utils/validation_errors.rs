@@ -1,44 +1,44 @@
 use polars::prelude::*;
 use thiserror::Error;
 
-#[derive(Error, Debug,)]
+#[derive(Error, Debug)]
 pub enum ValidationError {
     #[error(
         "The input DataFrame is empty. \
         Current shape: {rows}, {columns}. \
         Normalization techiques cannot be applied to empty DataFrames."
     )]
-    EmptyDataFrameError { rows: usize, columns: usize, },
+    EmptyDataFrameError { rows: usize, columns: usize },
 
     #[error(
         "The column(s) {0} contain non-numeric data. \
         Z-score transformation cannot be applied to non-numeric data types."
     )]
-    NonNumericError(String,),
+    NonNumericError(String),
 
     #[error(
         "The column(s) {0} contain NaN values. \
         Z-score transformation cannot be applied. \
         Handle NaN values before attempting to apply normalization techniques."
     )]
-    NanValuesError(String,),
+    NanValuesError(String),
 
     #[error(
         "The column(s) {0} contain infinite values. \
         Z-score transformation cannot be applied. \
         Handle infinite values before attempting to apply normalization techniques."
     )]
-    InfiniteValuesError(String,),
+    InfiniteValuesError(String),
 
     #[error(
         "The column(s) {0} contain missing values. \
         Z-score transformation cannot be applied. \
         Handle missing values before attempting to apply normalization techniques."
     )]
-    MissingValuesError(String,),
+    MissingValuesError(String),
 
     #[error(transparent)]
-    PolarsError(#[from] PolarsError,),
+    PolarsError(#[from] PolarsError),
 }
 
 /// Validates that the DataFrame is not empty (has at least one row).
@@ -49,14 +49,14 @@ pub enum ValidationError {
 /// # Returns
 /// * `Ok(())` if the DataFrame has at least one row.
 /// * `Err(ValidationError::EmptyDataFrameError)` if the DataFrame is empty.
-pub fn validate_not_empty_df(df: &DataFrame,) -> Result<(), ValidationError,> {
-    let (rows, columns,) = df.shape();
+pub fn validate_not_empty_df(df: &DataFrame) -> Result<(), ValidationError> {
+    let (rows, columns) = df.shape();
 
     if df.height() == 0 {
-        return Err(ValidationError::EmptyDataFrameError { rows, columns, },);
+        return Err(ValidationError::EmptyDataFrameError { rows, columns });
     }
 
-    Ok((),)
+    Ok(())
 }
 
 /// Validates that all columns in the DataFrame are of type `Float64` or `Float32`.
@@ -67,23 +67,21 @@ pub fn validate_not_empty_df(df: &DataFrame,) -> Result<(), ValidationError,> {
 /// # Returns
 /// * `Ok(())` if all columns are of type `Float64` or `Float32`.
 /// * `Err(ValidationError::NonNumericError)` with a list of columns that are not `Float64` or `Float32`.
-pub fn validate_numeric_columns(df: &DataFrame,) -> Result<(), ValidationError,> {
-    let non_numeric_cols: Vec<String,> = df
+pub fn validate_numeric_columns(df: &DataFrame) -> Result<(), ValidationError> {
+    let non_numeric_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter_map(|col| {
-            (!matches!(col.dtype(), DataType::Float64 | DataType::Float32))
-                .then(|| col.name().to_string(),)
-        },)
+        .filter(|col| !matches!(col.dtype(), DataType::Float64 | DataType::Float32))
+        .map(|col| col.name().to_string())
         .collect();
 
     if !non_numeric_cols.is_empty() {
         Err(ValidationError::NonNumericError(
-            non_numeric_cols.join(", ",),
-        ),)?;
+            non_numeric_cols.join(", "),
+        ))?;
     }
 
-    Ok((),)
+    Ok(())
 }
 
 /// Validates that no columns in the DataFrame contain `NaN` (Not a Number) values.
@@ -94,18 +92,19 @@ pub fn validate_numeric_columns(df: &DataFrame,) -> Result<(), ValidationError,>
 /// # Returns
 /// * `Ok(())` if no `NaN` values are found in float columns.
 /// * `Err(ValidationError::NanValuesError)` with a list of columns containing NaN values.
-pub fn validate_nan_values(df: &DataFrame,) -> Result<(), ValidationError,> {
-    let nan_cols: Vec<String,> = df
+pub fn validate_nan_values(df: &DataFrame) -> Result<(), ValidationError> {
+    let nan_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter_map(|col| col.is_nan().unwrap().any().then(|| col.name().to_string(),),)
+        .filter(|col| col.is_nan().unwrap().any())
+        .map(|col| col.name().to_string())
         .collect();
 
     if !nan_cols.is_empty() {
-        Err(ValidationError::NanValuesError(nan_cols.join(", ",),),)?;
+        Err(ValidationError::NanValuesError(nan_cols.join(", ")))?;
     }
 
-    Ok((),)
+    Ok(())
 }
 
 /// Validates that no columns in the DataFrame contain infinite values.
@@ -116,23 +115,19 @@ pub fn validate_nan_values(df: &DataFrame,) -> Result<(), ValidationError,> {
 /// # Returns
 /// * `Ok(())` if no infinite values are found in float columns.
 /// * `Err(ValidationError::InfiniteValuesError)` with a list of columns containing infinite values.
-pub fn validate_infinite_values(df: &DataFrame,) -> Result<(), ValidationError,> {
-    let inf_cols: Vec<String,> = df
+pub fn validate_infinite_values(df: &DataFrame) -> Result<(), ValidationError> {
+    let inf_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter_map(|col| {
-            col.is_infinite()
-                .unwrap()
-                .any()
-                .then(|| col.name().to_string(),)
-        },)
+        .filter(|col| col.is_infinite().unwrap().any())
+        .map(|col| col.name().to_string())
         .collect();
 
     if !inf_cols.is_empty() {
-        Err(ValidationError::InfiniteValuesError(inf_cols.join(", ",),),)?;
+        Err(ValidationError::InfiniteValuesError(inf_cols.join(", ")))?;
     }
 
-    Ok((),)
+    Ok(())
 }
 
 /// Validates that no columns in the DataFrame contain missing (null) values.
@@ -143,20 +138,19 @@ pub fn validate_infinite_values(df: &DataFrame,) -> Result<(), ValidationError,>
 /// # Returns
 /// * `Ok(())` if no missing values are found.
 /// * `Err(ValidationError::MissingValuesError)` with a list of columns containing missing (null) values.
-pub fn validate_missing_values(df: &DataFrame,) -> Result<(), ValidationError,> {
-    let missing_cols: Vec<String,> = df
+pub fn validate_missing_values(df: &DataFrame) -> Result<(), ValidationError> {
+    let missing_cols: Vec<String> = df
         .get_columns()
         .iter()
-        .filter_map(|col| col.is_null().any().then(|| col.name().to_string(),),)
+        .filter(|col| col.is_null().any())
+        .map(|col| col.name().to_string())
         .collect();
 
     if !missing_cols.is_empty() {
-        Err(ValidationError::MissingValuesError(
-            missing_cols.join(", ",),
-        ),)?;
+        Err(ValidationError::MissingValuesError(missing_cols.join(", ")))?;
     }
 
-    Ok((),)
+    Ok(())
 }
 
 /// Validates a DataFrame for preprocessing operations by performing a series of quality checks.
@@ -185,14 +179,14 @@ pub fn validate_missing_values(df: &DataFrame,) -> Result<(), ValidationError,> 
 /// - `NanValuesError` if any column contains NaN values.
 /// - `InfiniteValuesError` if any column contains infinite values.
 /// - `MissingValuesError` if any column contains null values.
-pub fn validate_dataframe(df: &DataFrame,) -> Result<(), ValidationError,> {
-    validate_not_empty_df(df,)?;
-    validate_numeric_columns(df,)?;
-    validate_nan_values(df,)?;
-    validate_infinite_values(df,)?;
-    validate_missing_values(df,)?;
+pub fn validate_dataframe(df: &DataFrame) -> Result<(), ValidationError> {
+    validate_not_empty_df(df)?;
+    validate_numeric_columns(df)?;
+    validate_nan_values(df)?;
+    validate_infinite_values(df)?;
+    validate_missing_values(df)?;
 
-    Ok((),)
+    Ok(())
 }
 
 #[cfg(test)]
@@ -200,18 +194,18 @@ mod tests {
     use super::*;
 
     fn create_empty_df() -> DataFrame {
-        let empty_col_1 = Series::new_empty("empty_col_1".into(), &DataType::Float64,);
-        let empty_col_2 = Series::new_empty("empty_col_2".into(), &DataType::Float64,);
+        let empty_col_1 = Series::new_empty("empty_col_1".into(), &DataType::Float64);
+        let empty_col_2 = Series::new_empty("empty_col_2".into(), &DataType::Float64);
 
-        DataFrame::new(vec![empty_col_1.into(), empty_col_2.into()],).unwrap()
+        DataFrame::new(vec![empty_col_1.into(), empty_col_2.into()]).unwrap()
     }
 
     fn create_invalid_df() -> DataFrame {
-        let float_valid = Series::new("float_valid".into(), &[1.0f64, 2.0, 3.0,],);
-        let float_with_nan = Series::new("float_nan".into(), &[1.0f64, f64::NAN, 3.0,],);
-        let float_with_inf = Series::new("float_inf".into(), &[1.0f64, f64::INFINITY, 3.0,],);
-        let integer_series = Series::new("int_col".into(), &[1i32, 2, 3,],);
-        let with_nulls = Series::new("nulls".into(), &[Some(1.0f64,), None, Some(3.0,),],);
+        let float_valid = Series::new("float_valid".into(), &[1.0f64, 2.0, 3.0]);
+        let float_with_nan = Series::new("float_nan".into(), &[1.0f64, f64::NAN, 3.0]);
+        let float_with_inf = Series::new("float_inf".into(), &[1.0f64, f64::INFINITY, 3.0]);
+        let integer_series = Series::new("int_col".into(), &[1i32, 2, 3]);
+        let with_nulls = Series::new("nulls".into(), &[Some(1.0f64), None, Some(3.0)]);
 
         DataFrame::new(vec![
             float_valid.into(),
@@ -219,22 +213,22 @@ mod tests {
             float_with_inf.into(),
             integer_series.into(),
             with_nulls.into(),
-        ],)
+        ])
         .unwrap()
     }
 
     fn create_valid_df() -> DataFrame {
         DataFrame::new(vec![
-            Series::new("col1".into(), &[1.0f32, 2.0, 3.0,],).into(),
-            Series::new("col2".into(), &[4.0f64, 5.0, 6.0,],).into(),
-        ],)
+            Series::new("col1".into(), &[1.0f32, 2.0, 3.0]).into(),
+            Series::new("col2".into(), &[4.0f64, 5.0, 6.0]).into(),
+        ])
         .unwrap()
     }
 
     #[test]
     fn test_validate_not_empty_df() {
         let invalid_df = create_empty_df();
-        let result = validate_not_empty_df(&invalid_df,);
+        let result = validate_not_empty_df(&invalid_df);
         assert!(matches!(
             result,
             Err(ValidationError::EmptyDataFrameError {
@@ -250,7 +244,7 @@ mod tests {
     #[test]
     fn test_validate_numeric_columns() {
         let invalid_df = create_invalid_df();
-        let result = validate_numeric_columns(&invalid_df,);
+        let result = validate_numeric_columns(&invalid_df);
         assert!(matches!(result, Err(ValidationError::NonNumericError(_))));
 
         let valid_df = create_valid_df();
@@ -260,7 +254,7 @@ mod tests {
     #[test]
     fn test_validate_nan_values() {
         let invalid_df = create_invalid_df();
-        let result = validate_nan_values(&invalid_df,);
+        let result = validate_nan_values(&invalid_df);
         assert!(matches!(result, Err(ValidationError::NanValuesError(_))));
 
         let valid_df = create_valid_df();
@@ -270,7 +264,7 @@ mod tests {
     #[test]
     fn test_validate_infinite_values() {
         let invalid_df = create_invalid_df();
-        let result = validate_infinite_values(&invalid_df,);
+        let result = validate_infinite_values(&invalid_df);
         assert!(matches!(
             result,
             Err(ValidationError::InfiniteValuesError(_))
@@ -283,7 +277,7 @@ mod tests {
     #[test]
     fn test_validate_missing_values() {
         let invalid_df = create_invalid_df();
-        let result = validate_missing_values(&invalid_df,);
+        let result = validate_missing_values(&invalid_df);
         assert!(matches!(
             result,
             Err(ValidationError::MissingValuesError(_))
@@ -296,7 +290,7 @@ mod tests {
     #[test]
     fn test_validate_dataframe() {
         let invalid_df = create_invalid_df();
-        let result = validate_dataframe(&invalid_df,);
+        let result = validate_dataframe(&invalid_df);
         assert!(result.is_err());
 
         let valid_df = create_valid_df();
