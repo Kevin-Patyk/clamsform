@@ -3,6 +3,11 @@ debug/
 target/
 **/*.rs.bk
 
+# Environment files
+.env
+.env.local
+.env.*
+
 # Data Files
 *.csv
 *.parquet

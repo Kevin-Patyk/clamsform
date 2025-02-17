@@ -87,7 +87,6 @@ cargo test test_name
 
 ## Acknowledgements 
 
-* Scikit-learn for inspiration and providing a great reference implementation.
 * The Rust🦀 community for tools and support.
 * The developers of `polars` and any contributors for making a revolutionary form of working with DataFrames.
 
