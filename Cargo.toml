@@ -4,6 +4,9 @@ members = [
     "crates/clamsform",
     "crates/clamsform-core"
     ]
+default-members = [
+  "crates/*",
+]
 
 [workspace.dependencies]
 polars = {version = "0.46.0", features = ["lazy"]}

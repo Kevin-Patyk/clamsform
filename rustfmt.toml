@@ -5,3 +5,4 @@ imports_layout = "Vertical"
 
 # Style
 match_block_trailing_comma = true
+trailing_comma = "Always"
