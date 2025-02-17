@@ -141,7 +141,7 @@ cargo bench
 5. Commit your changes following conventional commits. 
 6. Push to your branch:
 
-```bash
+```
 git push origin <type>/<description>
 ```
 7. Open a pull request to `main`.
