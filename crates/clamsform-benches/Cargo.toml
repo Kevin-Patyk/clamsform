@@ -10,3 +10,8 @@ rayon.workspace = true
 
 [dev-dependencies]
 criterion = "0.5.1"
+rand = "0.9.0"
+
+[[bench]]
+name = "validation_benchmarks"
+harness = false

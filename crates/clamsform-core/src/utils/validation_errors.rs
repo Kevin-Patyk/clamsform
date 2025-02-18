@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use rayon::prelude::*;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -187,6 +188,29 @@ pub fn validate_dataframe(df: &DataFrame) -> Result<(), ValidationError> {
     validate_missing_values(df)?;
 
     Ok(())
+}
+
+/// Parallel implementation of dataframe validation.
+/// Note: Benchmarks show this is currently slower than the sequential version
+/// due to overhead exceeding parallel processing benefits.
+/// See the clamsform-benches/benchmarks/validation_benchmark.rs
+/// directory for detailed performance comparison.
+#[allow(clippy::type_complexity)]
+pub fn validate_dataframe_parallel(df: &DataFrame) -> Result<(), ValidationError> {
+    let validations: Vec<fn(&DataFrame) -> Result<(), ValidationError>> = vec![
+        validate_not_empty_df,
+        validate_numeric_columns,
+        validate_nan_values,
+        validate_infinite_values,
+        validate_missing_values,
+    ];
+
+    let results: Vec<Result<(), ValidationError>> = validations
+        .par_iter()
+        .map(|validation| validation(df))
+        .collect();
+
+    results.into_iter().collect()
 }
 
 #[cfg(test)]
