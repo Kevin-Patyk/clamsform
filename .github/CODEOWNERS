@@ -1,0 +1,8 @@
+# Default owners for everything in the repo
+* @Kevin-Patyk
+
+# Crates directory and its contents
+/crates/ @Kevin-Patyk
+/crates/clamsform/ @Kevin-Patyk
+/crates/clamsform-benches/ @Kevin-Patyk
+/crates/clamsform-core/ @Kevin-Patyk
