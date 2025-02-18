@@ -1,8 +1,8 @@
 use polars::prelude::*;
 
 use super::super::traits::FeatureScaler;
-use super::z_standardization_errors::ZStandardizationError;
-use crate::utils::validation_errors::*;
+use super::errors::ZStandardizationError;
+use crate::validation::errors::*;
 
 pub struct ZScoreTransformer {
     df: DataFrame,

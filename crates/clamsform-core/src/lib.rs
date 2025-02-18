@@ -1,2 +1,2 @@
 pub mod feature_scaling;
-pub mod utils;
+pub mod validation;

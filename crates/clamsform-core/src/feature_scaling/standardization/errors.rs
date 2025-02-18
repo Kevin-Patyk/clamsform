@@ -1,7 +1,7 @@
 use polars::prelude::*;
 use thiserror::Error;
 
-use crate::utils::validation_errors::ValidationError;
+use crate::validation::errors::ValidationError;
 
 #[derive(Error, Debug)]
 pub enum ZStandardizationError {
