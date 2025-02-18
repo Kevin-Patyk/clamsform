@@ -1,6 +1,6 @@
 use polars::prelude::DataFrame;
 
-use super::z_standardization::z_standardization_errors::ZStandardizationError;
+use super::standardization::errors::ZStandardizationError;
 
 pub trait FeatureScaler {
     fn fit(&mut self) -> Result<(), ZStandardizationError>;

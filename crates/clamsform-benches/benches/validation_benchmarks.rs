@@ -1,4 +1,4 @@
-use clamsform_core::utils::validation_errors::{
+use clamsform_core::validation::errors::{
     validate_dataframe,
     validate_dataframe_parallel,
 };
