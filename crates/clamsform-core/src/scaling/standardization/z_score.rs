@@ -87,3 +87,41 @@ impl FeatureScaler for ZScoreScaler {
         self.std = None;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Testing constructor and default
+    #[test]
+    fn test_new_constructor() {
+        let z_score_scaler = ZScoreScaler::new();
+        assert!(z_score_scaler.mean.is_none());
+        assert!(z_score_scaler.std.is_none());
+    }
+
+    #[test]
+    fn test_default_constructor() {
+        let z_score_scaler = ZScoreScaler::default();
+        assert!(z_score_scaler.mean.is_none());
+        assert!(z_score_scaler.std.is_none());
+    }
+
+    // Testing getter methods
+    #[test]
+    fn test_getter_methods() {
+        let mut z_score_scaler = ZScoreScaler::new();
+
+        assert!(z_score_scaler.mean().is_none());
+        assert!(z_score_scaler.std().is_none());
+
+        let sample_mean = df!["col1" => [0.5]].unwrap();
+        let sample_std = df!["col1" => [1.2]].unwrap();
+
+        z_score_scaler.mean = Some(sample_mean.clone());
+        z_score_scaler.std = Some(sample_std.clone());
+
+        assert_eq!(z_score_scaler.mean().unwrap(), &sample_mean);
+        assert_eq!(z_score_scaler.std().unwrap(), &sample_std);
+    }
+}
