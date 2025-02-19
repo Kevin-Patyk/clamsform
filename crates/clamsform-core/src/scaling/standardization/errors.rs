@@ -4,7 +4,7 @@ use thiserror::Error;
 use crate::validation::errors::ValidationError;
 
 #[derive(Error, Debug)]
-pub enum ZStandardizationError {
+pub enum ScalingError {
     #[error(
         "The standard deviation in column(s) {0} is zero. \
         Division by zero is not allowed. \
@@ -18,6 +18,9 @@ pub enum ZStandardizationError {
         Consider removing this feature or applying a different normalization technique."
     )]
     NearZeroStandardDeviationError(String),
+
+    #[error("Uninitialized scaler: {0}")]
+    UninitializedScaler(String),
 
     #[error(transparent)]
     ValidationError(#[from] ValidationError),
@@ -36,9 +39,9 @@ pub enum ZStandardizationError {
 ///
 /// # Returns
 /// * `Ok(())` if all columns have non-zero standard deviations
-/// * `Err(ZStandardizationError::ZeroStandardDeviationError)` with a comma-separated list of
+/// * `Err(ScalingError::ZeroStandardDeviationError)` with a comma-separated list of
 ///   column names that have zero standard deviation
-pub fn validate_non_zero_std(df: &DataFrame) -> Result<(), ZStandardizationError> {
+pub fn validate_non_zero_std(df: &DataFrame) -> Result<(), ScalingError> {
     let zero_std_cols: Vec<String> = df
         .get_columns()
         .iter()
@@ -50,7 +53,7 @@ pub fn validate_non_zero_std(df: &DataFrame) -> Result<(), ZStandardizationError
         .collect();
 
     if !zero_std_cols.is_empty() {
-        return Err(ZStandardizationError::ZeroStandardDeviationError(
+        return Err(ScalingError::ZeroStandardDeviationError(
             zero_std_cols.join(", "),
         ));
     }
@@ -69,9 +72,9 @@ pub fn validate_non_zero_std(df: &DataFrame) -> Result<(), ZStandardizationError
 ///
 /// # Returns
 /// * `Ok(())` if all columns have standard deviations >= 1e-8
-/// * `Err(ZStandardizationError::ZeroStandardDeviationError)` with a comma-separated list of
+/// * `Err(ScalingError::ZeroStandardDeviationError)` with a comma-separated list of
 ///   column names that have standard deviations below the threshold
-pub fn validate_near_zero_std(df: &DataFrame) -> Result<(), ZStandardizationError> {
+pub fn validate_near_zero_std(df: &DataFrame) -> Result<(), ScalingError> {
     const NEAR_ZERO_THRESHOLD: f64 = 1e-8;
 
     let zero_std_cols: Vec<String> = df
@@ -89,7 +92,7 @@ pub fn validate_near_zero_std(df: &DataFrame) -> Result<(), ZStandardizationErro
         .collect();
 
     if !zero_std_cols.is_empty() {
-        return Err(ZStandardizationError::ZeroStandardDeviationError(
+        return Err(ScalingError::ZeroStandardDeviationError(
             zero_std_cols.join(", "),
         ));
     }
@@ -110,14 +113,14 @@ pub fn validate_near_zero_std(df: &DataFrame) -> Result<(), ZStandardizationErro
 /// # Returns
 ///
 /// * `Ok(())` if all validations pass.
-/// * `Err(ZStandardizationError)` containing the specific validation error encountered.
+/// * `Err(ScalingError)` containing the specific validation error encountered.
 ///
 /// # Errors
 ///
 /// This function returns an error if the following condition is met:
 /// - `ZeroStandardDeviationError` if any columns have zero or near-zero (< 1e-8) standard deviation,
 ///   with the error message containing a comma-separated list of problematic column names.
-pub fn validate_stds(df: &DataFrame) -> Result<(), ZStandardizationError> {
+pub fn validate_stds(df: &DataFrame) -> Result<(), ScalingError> {
     validate_non_zero_std(df)?;
     validate_near_zero_std(df)?;
 
@@ -150,7 +153,7 @@ mod tests {
         let result = validate_non_zero_std(&invalid_df);
         assert!(matches!(
             result,
-            Err(ZStandardizationError::ZeroStandardDeviationError(_))
+            Err(ScalingError::ZeroStandardDeviationError(_))
         ));
 
         let valid_df = create_valid_df();
@@ -163,7 +166,7 @@ mod tests {
         let result = validate_near_zero_std(&invalid_df);
         assert!(matches!(
             result,
-            Err(ZStandardizationError::ZeroStandardDeviationError(_))
+            Err(ScalingError::ZeroStandardDeviationError(_))
         ));
 
         let valid_df = create_valid_df();
