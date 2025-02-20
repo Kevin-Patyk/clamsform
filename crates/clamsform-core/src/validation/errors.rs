@@ -217,41 +217,28 @@ pub fn validate_dataframe_parallel(df: &DataFrame) -> Result<(), ValidationError
 mod tests {
     use super::*;
 
-    fn create_empty_df() -> DataFrame {
-        let empty_col_1 = Series::new_empty("empty_col_1".into(), &DataType::Float64);
-        let empty_col_2 = Series::new_empty("empty_col_2".into(), &DataType::Float64);
-
-        DataFrame::new(vec![empty_col_1.into(), empty_col_2.into()]).unwrap()
-    }
-
     fn create_invalid_df() -> DataFrame {
-        let float_valid = Series::new("float_valid".into(), &[1.0f64, 2.0, 3.0]);
-        let float_with_nan = Series::new("float_nan".into(), &[1.0f64, f64::NAN, 3.0]);
-        let float_with_inf = Series::new("float_inf".into(), &[1.0f64, f64::INFINITY, 3.0]);
-        let integer_series = Series::new("int_col".into(), &[1i32, 2, 3]);
-        let with_nulls = Series::new("nulls".into(), &[Some(1.0f64), None, Some(3.0)]);
-
-        DataFrame::new(vec![
-            float_valid.into(),
-            float_with_nan.into(),
-            float_with_inf.into(),
-            integer_series.into(),
-            with_nulls.into(),
-        ])
+        df![
+            "float_valid" => [1.0f64, 2.0, 3.0],
+            "float_nan" => [1.0f64, f64::NAN, 3.0],
+            "float_inf" => [1.0f64, f64::INFINITY, 3.0],
+            "int_col" => [1i32, 2, 3],
+            "nulls" => [Some(1.0f64), None, Some(3.0)]
+        ]
         .unwrap()
     }
 
     fn create_valid_df() -> DataFrame {
-        DataFrame::new(vec![
-            Series::new("col1".into(), &[1.0f32, 2.0, 3.0]).into(),
-            Series::new("col2".into(), &[4.0f64, 5.0, 6.0]).into(),
-        ])
+        df![
+            "col1" => [1.0f32, 2.0, 3.0],
+            "col2" => [4.0f64, 5.0, 6.0]
+        ]
         .unwrap()
     }
 
     #[test]
     fn test_validate_not_empty_df() {
-        let invalid_df = create_empty_df();
+        let invalid_df = DataFrame::default();
         let result = validate_not_empty_df(&invalid_df);
         assert!(matches!(
             result,
