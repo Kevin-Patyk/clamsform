@@ -132,18 +132,18 @@ mod tests {
     use super::*;
 
     fn create_invalid_df() -> DataFrame {
-        DataFrame::new(vec![
-            Series::new("std1".into(), &[0.0f64]).into(),
-            Series::new("std2".into(), &[1e-9f64]).into(),
-        ])
+        df![
+            "std1" => [0.0f64],
+            "std2" => [1e-9f64]
+        ]
         .unwrap()
     }
 
     fn create_valid_df() -> DataFrame {
-        DataFrame::new(vec![
-            Series::new("std1".into(), &[2.33f64]).into(),
-            Series::new("std2".into(), &[33.75f32]).into(),
-        ])
+        df![
+            "std1" => [2.33f64],
+            "std2" => [33.75f32]
+        ]
         .unwrap()
     }
 
