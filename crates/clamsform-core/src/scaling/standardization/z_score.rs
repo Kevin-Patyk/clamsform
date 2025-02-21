@@ -4,12 +4,19 @@ use super::super::traits::FeatureScaler;
 use super::errors::*;
 use crate::validation::errors::*;
 
+/// A scaler that standardizes features using z-score normalization.
+///
+/// The Z-Score standardization scales features by subtracting the mean and dividing by
+/// the standard deviation for each feature.
 pub struct ZScoreScaler {
+    /// Stored mean values for each feature
     mean: Option<DataFrame>,
+    /// Stored standard deviation values for each feature
     std: Option<DataFrame>,
 }
 
 impl Default for ZScoreScaler {
+    /// Creates a new ZScoreScaler with default values
     fn default() -> Self {
         Self::new()
     }
@@ -46,6 +53,7 @@ impl FeatureScaler for ZScoreScaler {
     ///
     /// # Arguments
     /// * `df` - The DataFrame to standardize
+    /// * `decimals` - The number of decimal places for rounding
     ///
     /// # Returns
     /// A new dataframe with standardized values.
@@ -54,18 +62,28 @@ impl FeatureScaler for ZScoreScaler {
     /// Returns `ScalingError` if:
     /// * The input DataFrame is invalid in any way (see validation errors)
     /// * Any column has zero or near-zero standard deviation
-    fn standardize(&mut self, df: &DataFrame) -> Result<DataFrame, ScalingError> {
+    fn standardize(&mut self, df: &DataFrame, decimals: u32) -> Result<DataFrame, ScalingError> {
         validate_dataframe(df)?;
 
-        self.mean = Some(df.clone().lazy().select([all().mean()]).collect()?);
-        self.std = Some(df.clone().lazy().select([all().std(1)]).collect()?);
+        self.mean = Some(
+            df.clone()
+                .lazy()
+                .select([all().mean().round(decimals)])
+                .collect()?,
+        );
+        self.std = Some(
+            df.clone()
+                .lazy()
+                .select([all().std(1).round(decimals)])
+                .collect()?,
+        );
 
         validate_stds(self.std.as_ref().unwrap())?;
 
         let standardized_df = df
             .clone()
             .lazy()
-            .select([(all() - all().mean()) / all().std(1)])
+            .select([((all() - all().mean()) / all().std(1)).round(decimals)])
             .collect()?;
 
         Ok(standardized_df)
@@ -131,8 +149,8 @@ mod tests {
 
     fn create_standardized_df() -> DataFrame {
         df![
-            "feature1" => [-1.2649110640673518, -0.6324555320336759, 0.0, 0.6324555320336759, 1.2649110640673518],
-            "feature2" => [-1.2649110640673515, -0.6324555320336758, 0.0, 0.6324555320336758, 1.2649110640673515]
+            "feature1" => [-1.26, -0.63, 0.0, 0.63, 1.26],
+            "feature2" => [-1.26, -0.63, 0.0, 0.63, 1.26]
         ]
         .unwrap()
     }
@@ -149,7 +167,7 @@ mod tests {
         .unwrap();
 
         let _ = z_score_scaler
-            .standardize(&valid_df)
+            .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
         let actual_mean_arr = z_score_scaler
@@ -175,13 +193,13 @@ mod tests {
         let mut z_score_scaler = ZScoreScaler::new();
 
         let expected_std = df![
-            "feature1" => [1.5811388300841898],
-            "feature2" => [15.811388300841896]
+            "feature1" => [1.58],
+            "feature2" => [15.81]
         ]
         .unwrap();
 
         let _ = z_score_scaler
-            .standardize(&valid_df)
+            .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
         let actual_std_arr = z_score_scaler
@@ -209,7 +227,7 @@ mod tests {
         let expected_standardized_df = create_standardized_df();
 
         let actual_standardized_df = z_score_scaler
-            .standardize(&valid_df)
+            .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
         let actual_standardized_arr = actual_standardized_df
