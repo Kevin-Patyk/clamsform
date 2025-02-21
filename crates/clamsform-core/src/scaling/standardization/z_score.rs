@@ -101,8 +101,6 @@ impl FeatureScaler for ZScoreScaler {
 
 #[cfg(test)]
 mod tests {
-    use approx::abs_diff_eq;
-
     use super::*;
 
     // Test constructor and default
@@ -160,7 +158,7 @@ mod tests {
         let valid_df = create_valid_df();
         let mut z_score_scaler = ZScoreScaler::new();
 
-        let expected_mean = df![
+        let expected_mean_df = df![
             "feature1" => [3.0],
             "feature2" => [30.0]
         ]
@@ -170,21 +168,9 @@ mod tests {
             .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
-        let actual_mean_arr = z_score_scaler
-            .mean
-            .as_ref()
-            .unwrap()
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
-        let expected_mean_arr = expected_mean
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
+        let actual_mean_df = z_score_scaler.mean.as_ref().unwrap();
 
-        assert!(abs_diff_eq!(
-            actual_mean_arr,
-            expected_mean_arr,
-            epsilon = 1e-6
-        ));
+        assert_eq!(*actual_mean_df, expected_mean_df);
     }
 
     #[test]
@@ -192,7 +178,7 @@ mod tests {
         let valid_df = create_valid_df();
         let mut z_score_scaler = ZScoreScaler::new();
 
-        let expected_std = df![
+        let expected_std_df = df![
             "feature1" => [1.58],
             "feature2" => [15.81]
         ]
@@ -202,21 +188,9 @@ mod tests {
             .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
-        let actual_std_arr = z_score_scaler
-            .std
-            .as_ref()
-            .unwrap()
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
-        let expected_std_arr = expected_std
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
+        let actual_std_df = z_score_scaler.std.as_ref().unwrap();
 
-        assert!(abs_diff_eq!(
-            actual_std_arr,
-            expected_std_arr,
-            epsilon = 1e-6
-        ));
+        assert_eq!(*actual_std_df, expected_std_df);
     }
 
     #[test]
@@ -230,18 +204,7 @@ mod tests {
             .standardize(&valid_df, 2)
             .expect("Standardization failed");
 
-        let actual_standardized_arr = actual_standardized_df
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
-        let expected_standardized_arr = expected_standardized_df
-            .to_ndarray::<Float64Type>(IndexOrder::Fortran)
-            .unwrap();
-
-        assert!(abs_diff_eq!(
-            actual_standardized_arr,
-            expected_standardized_arr,
-            epsilon = 1e-6
-        ));
+        assert_eq!(actual_standardized_df, expected_standardized_df);
     }
 
     // Test reset method
