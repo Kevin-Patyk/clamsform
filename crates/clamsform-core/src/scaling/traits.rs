@@ -1,6 +1,6 @@
 use polars::prelude::DataFrame;
 
-use super::standardization::errors::ScalingError;
+use super::standardization::error::ScalingError;
 
 pub trait FeatureScaler {
     /// Computes scaling parameters and returns the transformed dataframe

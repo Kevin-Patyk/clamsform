@@ -1,29 +1,21 @@
 use polars::prelude::*;
 
 use super::super::traits::FeatureScaler;
-use super::errors::*;
-use crate::validation::errors::*;
+use super::error::*;
+use crate::validation::error::*;
 
-/// A scaler that standardizes features using z-score normalization.
-///
-/// The Z-Score standardization scales features by subtracting the mean and dividing by
-/// the standard deviation for each feature.
 pub struct ZScoreScaler {
-    /// Stored mean values for each feature
     mean: Option<DataFrame>,
-    /// Stored standard deviation values for each feature
     std: Option<DataFrame>,
 }
 
 impl Default for ZScoreScaler {
-    /// Creates a new ZScoreScaler with default values
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl ZScoreScaler {
-    /// Constructor method
     pub fn new() -> Self {
         ZScoreScaler {
             mean: None,
@@ -31,37 +23,16 @@ impl ZScoreScaler {
         }
     }
 
-    /// Access the computed mean values
     pub fn mean(&self) -> Option<&DataFrame> {
         self.mean.as_ref()
     }
 
-    /// Access the computed standard deviation values
     pub fn std(&self) -> Option<&DataFrame> {
         self.std.as_ref()
     }
 }
 
 impl FeatureScaler for ZScoreScaler {
-    /// Standardizes the input dataframe using Z-score standardization.
-    ///
-    /// This method computes the mean and standard deviation of each column
-    /// in the provided dataframe, stores these statistics internally, and
-    /// then transforms the data.
-    ///
-    /// Z-score standardization transforms each value as: (x - mean) / std
-    ///
-    /// # Arguments
-    /// * `df` - The DataFrame to standardize
-    /// * `decimals` - The number of decimal places for rounding
-    ///
-    /// # Returns
-    /// A new dataframe with standardized values.
-    ///
-    /// # Errors
-    /// Returns `ScalingError` if:
-    /// * The input DataFrame is invalid in any way (see validation errors)
-    /// * Any column has zero or near-zero standard deviation
     fn standardize(&mut self, df: &DataFrame, decimals: u32) -> Result<DataFrame, ScalingError> {
         validate_dataframe(df)?;
 
@@ -78,7 +49,7 @@ impl FeatureScaler for ZScoreScaler {
                 .collect()?,
         );
 
-        validate_stds(self.std.as_ref().unwrap())?;
+        validate_denoms(self.std.as_ref().unwrap(), "standard deviation")?;
 
         let standardized_df = df
             .clone()
@@ -89,10 +60,6 @@ impl FeatureScaler for ZScoreScaler {
         Ok(standardized_df)
     }
 
-    /// Resets the scaler by clearing stored statistics.
-    ///
-    /// After calling this method, the scaler will return to its initial state,
-    /// and `standardize()` must be called again to use the scaler.
     fn reset(&mut self) {
         self.mean = None;
         self.std = None;
